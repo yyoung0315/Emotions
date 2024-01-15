@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yoon.emotions.dao.BoardDao">
+
+	<!-- 관심글 등록 -->
+	<insert id="interestInsert" parameterType="com.yoon.emotions.vo.InterestVO">
+		INSERT INTO EMOTIONS_INTEREST 						/*관심글 테이블*/ 
+			(USER_ID		 								
+			, BOARD_NO
+			)VALUES
+			(#{user_id}										/*parameter 관심글 등록아이디*/
+			,#{board_no})									/*parameter 관심글 고유번호*/
+	</insert>
+	
+	<!-- 관심글 삭제 -->
+	<delete id="interestDel" parameterType="com.yoon.emotions.vo.InterestVO">
+		DELETE FROM
+			EMOTIONS_INTEREST 						/*관심글 테이블*/
+		WHERE
+				BOARD_NO=#{board_no}  				/*parameter 번호*/
+			AND USER_ID=#{user_id} 					/*parameter 작성자 아이디*/
+	</delete>
+	
+	<!-- 관심글 조회여부 확인용 있으면1 없으면0 -->
+	<select id="interestListWhether" parameterType="com.yoon.emotions.vo.InterestVO">
+		SELECT 
+			COUNT(BOARD_NO)
+		FROM
+			EMOTIONS_INTEREST 						/*관심글 테이블*/
+		WHERE
+				BOARD_NO=#{board_no}  				/*parameter 번호*/
+			AND USER_ID=#{user_id} 					/*parameter 작성자 아이디*/
+			
+	</select>
+
+	<!-- 관심글 조회 -->
+	<select id="interesList" parameterType="String" resultType="com.yoon.emotions.vo.BoardVO" >
+		SELECT 
+			board.BOARD_NO
+			,board.BOARD_TITLE
+			,board.USER_ID
+		FROM
+			EMOTIONS_INTEREST as inter
+		JOIN
+			EMOTIONS_BOARD as board
+		ON
+			inter.BOARD_NO = board.BOARD_NO
+		where
+			inter.USER_ID = #{user_id}
+		
+	</select>
+	
+</mapper>

@@ -1,0 +1,35 @@
+@charset "UTF-8";
+
+/*아래는 bootstrap적용된 테이블에서 말줄임표 css*/
+	.table .ellipsis {
+    position: relative;
+    min-width: 500px;
+	}
+	.table .title {
+    position: relative;
+    min-width: 100px;
+	}
+	.table .ellipsis span {
+	    overflow: hidden;
+	    white-space: nowrap;
+	    text-overflow: ellipsis;
+	    position: absolute;
+	    left: 9px;
+	    right: 9px;
+	}
+	.table .title span {
+	    overflow: hidden;
+	    white-space: nowrap;
+	    text-overflow: ellipsis;
+	    position: absolute;
+	    left: 9px;
+	    right: 9px;
+	}
+	.ellipsis:before {
+	    content: '';
+	    display: inline-block;
+	}
+	.title:before {
+	    content: '';
+	    display: inline-block;
+	}

@@ -1,0 +1,38 @@
+package com.yoon.emotions.service;
+
+import java.util.Map;
+
+import com.yoon.emotions.vo.ReplyVO;
+
+public interface ReplyService {
+	
+	/**
+	 * 댓글 등록
+	 * @param writeData(userId,title,content)
+	 * @return 성공시 1 이상 실패 시 0
+	 */
+	int replyInsert(Map<String, String> ReplyData);
+	
+	/**
+	 * 댓글 삭제 
+	 * @param reply_no 해당 댓글의 번호
+	 * @return 성공시 1 이상 실패 시 0
+	 */
+	int replyDelete(int reply_no);
+	
+	/**
+	 * 댓글 등록
+	 * @param writeData(userId,title,content)
+	 * @return 성공시 1 이상 실패 시 0
+	 */
+	int addReply(Map<String, String> addReplyData);
+	
+	/**
+	 * 댓글 수정
+	 * @param writeData(userId,title,content)
+	 * @return 성공시 1 이상 실패 시 0
+	 */
+	int editReply(Map<String, String> editReplyData);
+
+	
+}

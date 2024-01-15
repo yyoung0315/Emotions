@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yoon.emotions.dao.UserDao">
+
+	<select id="idCheck" resultType="String" >
+		SELECT 
+			USER_ID 					/*사용자 아이디*/
+		FROM 
+			EMOTIONS_USER 				/*회원테이블*/
+		WHERE 
+			USER_ID=#{user_id}  		/*parameter 아이디*/
+	</select>
+	
+	<insert id="userInsert" parameterType="com.yoon.emotions.vo.UserVO">
+		INSERT INTO EMOTIONS_USER 		/*회원테이블*/
+			(NAME  						/*이름*/
+			,USER_ID					/*사용자 아이디*/
+			,PWD						/*비밀번호*/
+			,BDAY						/*생년월일*/
+			,TEL						/*휴대폰*/
+			,ADDRESS_NUM 				/*우편번호*/
+			,ADDRESS					/*주소*/
+			,AUTH_ID					/*권한*/
+			,SAD_EMOTIONS				/*슬픈글 횟수*/
+		)VALUES
+			(#{name} 					/*parameter 이름*/
+			,#{user_id}					/*parameter 아이디*/
+			,SHA2(#{pwd},256)			/*parameter 비밀번호*/
+			,#{bday}					/*parameter 생년월일*/
+			,#{tel}						/*parameter 휴대폰*/
+			,#{address_num}				/*parameter 우편번호*/
+			,#{address}					/*parameter 주소*/
+			,#{auth_id}					/*parameter 권한 상세*/
+			,#{sad_emotions})			/*parameter 슬픈글 횟수*/
+			
+			
+	</insert>
+	
+	<!--로그인-->
+	<select id="loginOk" parameterType="com.yoon.emotions.vo.UserVO" resultType="com.yoon.emotions.vo.UserVO">
+		SELECT 
+			NAME								/*이름*/
+			, USER_ID							/*사용자 아이디*/
+			, AUTH_ID							/*권한*/
+			, PROFIL_NAME						/*프로필사진이름*/
+		FROM 
+			EMOTIONS_USER 						/*회원테이블*/
+		WHERE 
+			BINARY USER_ID=#{user_id} 			/*parameter 아이디*/
+			AND BINARY PWD=SHA2(#{pwd},256)		/*parameter 비밀번호*/
+	</select>
+	
+	<!--회원 상세보기-->
+	<select id="userEdit" parameterType="com.yoon.emotions.vo.UserVO" resultType="com.yoon.emotions.vo.UserVO">
+		SELECT 
+			NAME    									/*이름*/
+			,USER_ID									/*사용자 아이디*/
+			,PWD										/*비밀번호*/
+			,DATE_FORMAT(BDAY,'%Y-%m-%d') as BDAY		/*생년월일*/
+			,TEL										/*휴대폰*/
+			,ADDRESS_NUM								/*우편번호*/
+			,ADDRESS									/*주소*/
+		FROM 
+			EMOTIONS_USER 								/*회원테이블*/
+		WHERE 
+			USER_ID=#{user_id} 							/*parameter 아이디*/
+	</select>
+	
+	<!-- 비밀번호 재설정 -->
+	<update id="pwdChange" parameterType="com.yoon.emotions.vo.UserVO">
+		UPDATE 
+			EMOTIONS_USER 							/*회원테이블*/
+		SET 
+			PWD=SHA2(#{pwd},256) 					/*parameter 비밀번호*/
+			,USER_UPDATE_DT=#{user_update_dt}		/*parameter 수정일자*/
+		WHERE 
+			USER_ID=#{user_id} 						/*parameter 아이디*/
+	</update>
+	
+	<!-- 프로필 사진변경 -->
+	<update id="changeProfil" parameterType="com.yoon.emotions.vo.UserVO">
+		UPDATE 
+			EMOTIONS_USER 							/*회원테이블*/
+		SET 
+			PROFIL_NAME=#{profil_name}				/*parameter 프로필 사진이름*/
+		WHERE 
+			USER_ID=#{user_id} 						/*parameter 아이디*/
+	</update>
+	
+	<!-- 프로필 사진 삭제 -->
+	<update id="delProfil" parameterType="String">
+		UPDATE 
+			EMOTIONS_USER 							/*회원테이블*/
+		SET 
+			PROFIL_NAME=#{profil_name}				/*parameter 프로필 사진이름*/
+		WHERE 
+			USER_ID=#{user_id} 						/*parameter 아이디*/
+	</update>
+	
+	<!-- 프로필 사진 명 가져오기 -->
+	<select id="profil" parameterType="String" resultType="String">
+		SELECT	
+			PROFIL_NAME								/*프로필 사진이름*/
+		FROM	
+			EMOTIONS_USER							/*회원테이블*/
+		WHERE 
+			USER_ID=#{user_id} 						/*parameter 아이디*/
+	
+	</select>
+</mapper>
