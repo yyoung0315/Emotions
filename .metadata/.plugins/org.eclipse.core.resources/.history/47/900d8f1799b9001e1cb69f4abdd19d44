@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yoon.emotions.dao.BoardDao">
+	<!-- 감정 불러오기 (상세 감정아닌 2차분류감정)-->
+	<select id="cls2Emotion" parameterType="String" resultType="com.yoon.emotions.vo.EmotionsVO" >
+		SELECT 
+			CLS2_NM 					/*2차분류 감정이름*/
+			,CLS2_IMG_NM				/*2차분류 이모티콘이름*/
+			,CLS2_CD					/*2차분류 코드*/
+		FROM 
+			EMOTIONS_CLASS2 			/*2차분류테이블*/
+		WHERE 
+			CLS1_CD = #{cls1_cd}		/*parameter 1차분류 코드*/
+		AND 
+			CLS2_YN = #{cls2_yn}		/*사용유무*/
+	</select>
+	
+	<!-- 캘린더 감정+board_no 불러오기-->
+	<select id="myCalendar" parameterType="String" resultType="com.yoon.emotions.vo.BoardVO" >
+		SELECT 
+			BOARD_NO
+			,v_emo.CLS2_IMG_NM
+			,DATE_FORMAT(BOARD_INPUT_DT,'%e') as inputDay
+		FROM 
+			EMOTIONS_BOARD as board
+		JOIN
+			v_emotion as v_emo
+		ON
+			board.EMOTIONS = v_emo.CLS3_CD
+		WHERE 
+			USER_ID = #{user_id}
+		AND
+			v_emo.CLS2_YN = #{cls2_yn}
+		AND
+			DATE_FORMAT(BOARD_INPUT_DT, '%Y%m') = #{nowYm}
+		ORDER BY 
+			BOARD_INPUT_DT 
+	</select>
+	
+	<!-- 당월에 쓴 글 개수-->
+	<select id="myCalendarCount" parameterType="String" resultType="int" >
+		SELECT 
+			COUNT(BOARD_NO)
+		FROM 
+			EMOTIONS_BOARD as board
+		JOIN
+			v_emotion as v_emo
+		ON
+			board.EMOTIONS = v_emo.CLS3_CD
+		WHERE 
+			USER_ID = #{user_id}
+		AND
+			v_emo.CLS2_YN = #{cls2_yn}
+		AND
+			DATE_FORMAT(BOARD_INPUT_DT, '%Y%m') = #{nowYm}
+		ORDER BY 
+			BOARD_INPUT_DT 
+	</select>
+	
+	<!--  해당글의 댓글 갯수 세기 -->
+	<update id="updateReplyCount" parameterType="int">
+		UPDATE 
+			EMOTIONS_BOARD 								/*게시판 테이블*/
+		SET 
+			REPLY_COUNT= (
+						SELECT 
+							COUNT(REPLY_NO)				/*댓글 갯수 세기*/
+						FROM 
+							EMOTIONS_REPLY 
+						WHERE
+							BOARD_NO = #{board_no})
+
+		WHERE	
+			BOARD_NO =  #{board_no}						/*parameter 번호*/
+	
+	</update>
+	
+	<!-- 유저글 갯수-->
+	<select id="totalCount" parameterType="com.yoon.emotions.vo.BoardVO" resultType="int">
+		SELECT
+			COUNT(BOARD_NO)												/*글 고유번호*/
+		FROM
+			EMOTIONS_BOARD as board										/*게시판 테이블 */
+		JOIN
+			emotions_class3 as cls3 
+		ON
+			board.emotions = cls3.cls3_cd 
+		<where>
+			<if test="search1 == 'board_title'">  
+				AND BOARD_TITLE LIKE CONCAT('%', #{search2}, '%') 		/*parameter 제목*/
+			</if>
+			<if test="search1 =='board_detail'">
+				AND BOARD_DETAIL LIKE CONCAT('%', #{search2}, '%')		/*parameter 내용*/
+			</if>
+			<if test="search1 =='user_id'">
+				USER_ID LIKE CONCAT('%', #{search2}, '%')		/*parameter 내용*/
+			</if>
+			<if test="cls2_cd != '' and  cls2_cd != null">  
+				AND cls3.cls2_cd = #{cls2_cd}							/*parameter 2차분류코드*/
+			</if>
+			<if test="screen =='myRecord'">
+				AND USER_ID = #{user_id}							/*parameter 회원아이디*/
+			</if>
+			<if test="screen =='yourRecord'">
+				AND HIDE = 'N'
+				AND USER_ID != #{user_id}							/*parameter 회원아이디*/
+			</if>
+		</where>
+	</select>
+	
+	<!-- 감정 불러오기 (상세 감정아닌 3차분류감정)-->
+	<select id="cls3Emotion" parameterType="String" resultType="com.yoon.emotions.vo.EmotionsVO">
+		SELECT 
+			CLS3_NM 					/*3차분류 감정이름*/
+			,CLS3_CD					/*3차분류 코드*/
+		FROM 
+			EMOTIONS_CLASS3 			/*3차분류테이블*/
+		WHERE 
+			CLS2_CD = #{cls2_cd}		/*parameter 2차분류 코드*/
+		AND 
+			CLS3_YN = #{cls3_yn}		/*사용유무*/
+	</select>
+	
+	<!-- 글등록 -->
+	<insert id="writeOk" parameterType="com.yoon.emotions.vo.BoardVO"  >
+		INSERT INTO EMOTIONS_BOARD 			/*게시판 테이블*/
+			(BOARD_TITLE   					/*제목*/
+			,BOARD_DETAIL 					/*내용*/
+			,USER_ID  						/*사용자 ID*/
+			,EMOTIONS						/*감정분류*/
+		)VALUES
+	 		(#{board_title}   				/*parameter 제목*/
+			,#{board_detail} 				/*parameter 내용*/
+			,#{user_id} 					/*parameter 아이디*/
+			,#{emotions}) 					/*parameter 감정분류*/
+	</insert>
+	
+	<!-- 나의/너의기록 목록 띄우기 -->
+	<select id="recordList" parameterType="com.yoon.emotions.vo.BoardVO" resultType="com.yoon.emotions.vo.BoardVO">
+			SELECT
+				rownum														/*화면 num 용*/
+				,a2.BOARD_NO												/*pk_번호*/
+				,a2.BOARD_TITLE												/*제목*/
+				,a2.BOARD_DETAIL											/*내용*/
+				,a2.USER_ID													/*작성자 ID*/
+				,a2.REPLY_COUNT  											/*댓글갯수*/
+				,a2.BOARD_input_DT											/*작성일*/
+				,a2.BOARD_UPDATE_DT											/*수정일*/
+				,a2.CLS3_NM													/*3차분류감정이름*/
+			FROM
+			(
+				SELECT 
+					a1.BOARD_NO												/*pk_번호*/
+					,a1.BOARD_TITLE											/*제목*/
+					,a1.BOARD_DETAIL										/*내용*/
+					,a1.USER_ID												/*작성자 ID*/
+					,a1.REPLY_COUNT  										/*댓글갯수*/
+					,a1.BOARD_INPUT_DT										/*작성일*/
+					,a1.BOARD_UPDATE_DT										/*수정일*/
+					,a1.CLS3_NM												/*3차분류감정이름*/
+					,@rownum := @rownum + 1 AS rownum						/*순서셋팅*/
+				FROM 
+				(
+					SELECT
+						BOARD_NO 											/*pk_번호*/
+						,BOARD_TITLE  										/*제목*/
+						,BOARD_DETAIL  										/*내용*/
+						,USER_ID  											/*작성자 ID*/
+						,REPLY_COUNT  										/*댓글갯수*/
+						,BOARD_INPUT_DT										/*입력일자*/
+						,BOARD_UPDATE_DT  									/*수정일시*/
+						,CLS3_NM											/*3차분류감정이름*/
+					FROM 
+						(SELECT @rownum := 0) AS init
+						,EMOTIONS_BOARD as board							/*게시판 테이블 */
+					JOIN
+						emotions_class3 as cls3 
+					ON
+						board.emotions = cls3.cls3_cd 
+				<where>		
+					<if test="search1 == 'board_title'">  
+						BOARD_TITLE LIKE CONCAT('%', #{search2}, '%') 		/*parameter 제목*/
+					</if>
+					<if test="search1 =='board_detail'">
+						BOARD_DETAIL LIKE CONCAT('%', #{search2}, '%')		/*parameter 내용*/
+					</if>
+					<if test="search1 =='user_id'">
+						USER_ID LIKE CONCAT('%', #{search2}, '%')		/*parameter 내용*/
+					</if>
+					<if test="cls2_cd != '' and  cls2_cd != null">  
+						AND cls3.cls2_cd = #{cls2_cd}						/*parameter 2차분류코드*/
+					</if>
+					<if test="screen =='myRecord'">
+						AND USER_ID = #{user_id}							/*parameter 회원아이디*/
+					</if>
+					<if test="screen =='yourRecord'">
+						AND HIDE = 'N'
+						AND USER_ID != #{user_id}							/*parameter 회원아이디*/
+					</if>
+				</where>	
+				) a1
+				ORDER BY
+					BOARD_INPUT_DT 
+			) a2
+			ORDER BY 
+				rownum DESC
+			LIMIT 
+				#{start}, #{pagelen}	
+	</select>
+	
+	<!-- 오늘 날짜의 글이 있는지 확인용 -->
+	<select id="toDay" parameterType="String" resultType="int" >
+		SELECT 
+			COUNT(BOARD_NO) 									
+		FROM 	
+			EMOTIONS_BOARD 												/*게시판 테이블 */
+		WHERE 
+			DATE_FORMAT(BOARD_INPUT_DT, "%Y-%m-%d") = CURDATE()			/*작성일 format수정해서 오늘날짜랑 비교하기*/
+		AND
+			USER_ID = #{user_id}										/*parameter 회원아이디*/
+	</select>
+	
+	<!-- 내가 쓴글 수정화면 띄우기(당일 날짜만 가능) -->
+	<select id="myEdit" parameterType="String" resultType="com.yoon.emotions.vo.BoardVO" >
+		SELECT 
+			BOARD_NO											/*게시글 PK*/
+			,BOARD_TITLE										/*제목*/
+			,BOARD_DETAIL										/*내용*/
+			,BOARD_INPUT_DT										/*작성일자*/
+			,EMOTIONS											/*감정분류*/
+			,CLS3_NM											/*3차분류 코드명*/
+			,CLS2_NM											/*2차분류 코드명*/
+			,CLS3_cd											/*2차분류 코드명*/
+		FROM 	
+			(
+				SELECT 
+					CLS2_NM										/*2차분류 코드명*/
+					,CLS3_NM									/*3차분류 코드명*/
+					,cls3.CLS2_CD								/*2차분류 코드*/
+					,cls3.CLS3_CD								/*3차분류 코드*/
+				FROM 
+					EMOTIONS_CLASS2 as cls2						/*2차 분류테이블*/
+				JOIN
+					EMOTIONS_CLASS3 as cls3						/*3차 분류테이블*/
+				ON 
+					cls2.CLS2_CD = cls3.CLS2_CD
+				WHERE 
+					cls2.CLS1_CD = #{cls1_cd}
+			) as t1
+		JOIN 
+			EMOTIONS_BOARD as board								/*게시판 테이블*/
+		ON
+			t1.CLS3_CD = board.EMOTIONS 						
+		WHERE
+			DATE_FORMAT(BOARD_INPUT_DT, "%Y-%m-%d") = CURDATE()	/*작성일 format수정해서 오늘날짜랑 비교하기*/
+		AND 
+			USER_ID = #{user_id}								/*parameter 회원아이디*/
+	</select>
+	
+	<!-- 내글 수정 -->
+	<update id="editOk" parameterType="com.yoon.emotions.vo.BoardVO">
+		UPDATE 
+			EMOTIONS_BOARD 								/*게시판 테이블*/
+		SET 
+			BOARD_TITLE=#{board_title}		 			/*parameter 제목*/
+			, BOARD_DETAIL =#{board_detail}  			/*parameter 내용*/
+			, BOARD_UPDATE_DT = #{board_update_dt}		/*parameter 수정일자*/
+			, EMOTIONS =#{emotions}						/*parameter 감정분류*/
+		WHERE	
+				BOARD_NO = #{board_no} 					/*parameter 번호*/
+			AND USER_ID=#{user_id}  					/*parameter 작성자 아이디*/
+	</update>
+	
+	<!-- 체크박스로 글 삭제   -->
+	<delete id="deleteCheck" parameterType="com.yoon.emotions.vo.BoardVO">
+		DELETE FROM 
+			EMOTIONS_BOARD  						/*게시판테이블*/
+		WHERE 
+				BOARD_NO=#{board_no}  				/*parameter 번호*/
+			AND USER_ID=#{user_id} 					/*parameter 작성자 아이디*/
+	</delete>
+	
+	<!-- 글상세 -->
+	<select id="DetailBoard"  resultType="com.yoon.emotions.vo.BoardVO">
+		SELECT
+			board_list.BOARD_NO					/*pk_번호*/
+			,board_list.USER_ID					/*작성자 ID*/
+			,board_list.BOARD_TITLE				/*제목*/
+			,board_list.BOARD_DETAIL			/*내용*/
+			,board_list.BOARD_INPUT_DT			/*입력일자*/
+			,board_list.beforeNum				/*이전글 no*/
+			,board_list.beforeTitle				/*이전글 제목*/
+			,board_list.nextNum					/*다음글 no*/
+			,board_list.nextTitle				/*다음글 제목*/
+			,board_list.Hide					/*비공개여부*/
+		FROM
+			(SELECT
+				BOARD_NO						/*pk_번호*/
+				, USER_ID						/*작성자 ID*/
+			    , BOARD_TITLE 					/*제목*/
+			    , BOARD_DETAIL 					/*내용*/
+			    , BOARD_INPUT_DT				/*입력일자*/
+			    , HIDE							/*비공개여부*/
+			    , LAG(BOARD_NO) OVER (ORDER BY BOARD_INPUT_DT desc) AS "beforeNum"			/*이전글 no*/
+			    , LAG(BOARD_TITLE) OVER (ORDER BY BOARD_INPUT_DT desc ) AS "beforeTitle"	/*이전글 제목*/
+			    , LEAD(BOARD_NO) OVER (ORDER BY BOARD_INPUT_DT desc) AS "nextNum"			/*다음글 no*/
+			    , LEAD(BOARD_TITLE) OVER (ORDER BY BOARD_INPUT_DT desc ) AS "nextTitle"		/*다음글 제목*/
+			FROM 
+				EMOTIONS_BOARD 																/*게시판 테이블*/
+			WHERE
+				<if test="screen =='myRecord'">
+					USER_ID = #{user_id}													/*parameter 회원아이디*/
+				</if>
+				<if test="screen =='yourRecord'">
+					USER_ID != #{user_id}													/*parameter 회원아이디*/
+				</if>
+			ORDER BY 
+				BOARD_INPUT_DT desc) as board_list 											/*게시판 테이블 ,이전,다음글 포함 */
+		where	
+			BOARD_NO = #{board_no}															/*parameter 번호*/
+	</select>
+	
+	<!-- 글 상세에서 2,3차 분류 감정 띄우기-->
+	<select id="detailEmotion" parameterType="com.yoon.emotions.vo.EmotionsVO" resultType="com.yoon.emotions.vo.EmotionsVO">
+		SELECT 
+			CLS3_NM												/*3차분류 코드명*/
+			,CLS2_NM											/*2차분류 코드명*/
+		FROM 	
+			(
+				SELECT 
+					CLS2_NM										/*2차분류 코드명*/
+					,CLS3_NM									/*3차분류 코드명*/
+					,cls3.CLS2_CD								/*2차분류 코드*/
+					,cls3.CLS3_CD								/*3차분류 코드*/
+				FROM 
+					EMOTIONS_CLASS2 as cls2						/*2차 분류테이블*/
+				JOIN
+					EMOTIONS_CLASS3 as cls3						/*3차 분류테이블*/
+				ON 
+					cls2.CLS2_CD = cls3.CLS2_CD
+				WHERE 
+					cls2.CLS1_CD = #{cls1_cd}
+			) as t1
+		JOIN 
+			EMOTIONS_BOARD as board								/*게시판 테이블*/
+		ON
+			t1.CLS3_CD = board.EMOTIONS 
+		where 
+			BOARD_NO = #{board_no}								/*parameter 번호*/
+	</select>
+	
+	<!-- 비공개 여부 -->
+	<update id="hideChk" parameterType="com.yoon.emotions.vo.BoardVO">
+		UPDATE 
+			EMOTIONS_BOARD 								/*게시판 테이블*/
+		SET 
+			HIDE=#{hide}		 						/*parameter 비공개 여부*/
+
+		WHERE	
+			BOARD_NO = #{board_no} 						/*parameter 번호*/
+	</update>
+	<!-- screen 이거 구별용 -->
+	<select id="screenChk" parameterType="int">
+		SELECT
+			USER_ID										/*회원아이디*/
+		FROM
+			EMOTIONS_BOARD								/*게시판 테이블*/
+		WHERE
+			BOARD_NO = #{board_no} 						/*parameter 번호*/
+	</select>
+	
+	<!-- 메인에 최신글 3개 띄우기 -->
+	<select id="newRecord" resultType="com.yoon.emotions.vo.BoardVO">
+		SELECT
+		    cls3.cls2_cd
+		    , board.board_input_dt
+		    , CLS2_IMG_NM
+		FROM 
+		  	emotions_board as board
+		JOIN
+		  	emotions_class3 as cls3
+		ON
+			board.emotions = cls3.cls3_cd
+		JOIN 
+		  	emotions_class2 as cls2
+		ON 
+		  	cls3.cls2_cd = cls2.cls2_cd 
+		 order by
+		  	board.board_input_dt desc
+		  limit
+		  	3
+	</select>
+</mapper>

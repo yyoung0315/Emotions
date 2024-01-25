@@ -1,0 +1,15 @@
+INDEX VERSION 1.134
+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\2000086959.index
+\emotionsProject\src\main\java
+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\1544787141.index
+\emotionsProject\src\main\java
+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\4083058808.index
+\emotionsProject\src\main\java
+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\1180875685.index
+\emotionsProject\src\main\java
+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\4042355610.index
+\emotionsProject\src\main\java
+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\1493108948.index
+\emotionsProject\src\main\java
+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\2115326627.index
+\emotionsProject\src\main\java

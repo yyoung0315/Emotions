@@ -1,0 +1,39 @@
+package com.yoon.emotions.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+public class adminController {
+	/**
+	 * 회원관리 화면으로 이동
+	 * @return
+	 */
+	@RequestMapping(value = "userManagement.do")
+	public String userManagement() {
+		
+		return "/admin/userManagement";		
+	}
+	
+	/**
+	 * 정지회원관리 화면으로 이동
+	 * @return
+	 */
+	@RequestMapping(value = "userManagement.do")
+	public String userManagement() {
+		
+		return "/admin/userManagement";		
+	}
+	
+	/**
+	 * 회원관리 화면으로 이동
+	 * @return
+	 */
+	@RequestMapping(value = "userManagement.do")
+	public String userManagement() {
+		
+		return "/admin/userManagement";		
+	}
+	
+	
+}

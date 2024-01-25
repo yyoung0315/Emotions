@@ -1,0 +1,57 @@
+
+
+spring.main.web-application-type=servlet
+server.port=8822
+
+spring.main.banner-mode=off 
+
+jasypt.encryptor.bean=jasyptStringEncryptor
+
+#해당 username , password 암호화하는 방법 찾기 완료
+#spring.datasource.username=root
+#spring.datasource.password=rpago!23
+spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
+spring.datasource.url=jdbc:mariadb://localhost:3306/emotions
+spring.datasource.username=ENC(VHmAsB7Orcd3yiG1ugxz1Q==)
+spring.datasource.password=ENC(rxo1zml2uZv2UsbWsXsVsw==)
+
+
+
+
+spring.mvc.view.prefix=/WEB-INF/view/
+spring.mvc.view.suffix=.jsp
+#spring.mvc.static-path-pattern=/resources/**
+
+
+mybatis.mapper-locations=classpath:mappers/**/*.xml
+
+server.servlet.session.persistent= false
+
+
+spring.servlet.multipart.max-file-size=100MB
+
+spring.servlet.multipart.max-request-size=100MB
+
+
+#고정 값을 query 또는 java / jsp에서 쓰지 않고 application.properties에서 참조해서 쓸수있도록 만들기
+
+#일반 유저
+auth.user = B002
+
+#사용유무 -사용
+yn.ok = Y
+
+#사용유무 -미사용
+yn.no = N
+
+#cls1_cd - 감정
+cls1.emotion = A
+
+#cls1_cd - 권한
+cls1.auth = B
+
+#cls1_cd - 신고
+cls1.report  = C
+
+#기본 프로필 사진
+basic_profil = person-fill.svg

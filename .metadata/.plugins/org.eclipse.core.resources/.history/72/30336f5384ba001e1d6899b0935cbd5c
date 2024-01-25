@@ -1,0 +1,6 @@
+package com.yoon.emotions.controller;
+
+@Controller
+public class adminController {
+	
+}

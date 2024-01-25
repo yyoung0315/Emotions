@@ -1,0 +1,67 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jstl/core_rt" prefix="c"%>
+ 
+ <%
+ String id = (String)session.getAttribute("SSO_ID");
+ String jsonStr = (String)session.getAttribute("jsonStr");
+ %>
+ 
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    
+    <title>RPA Platform</title>
+
+</head>
+<body id="page-top">
+
+<!-- Page Wrapper -->
+<div id="wrapper">
+	
+    <jsp:include page="left.jsp" flush="true"></jsp:include>
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="sh_cont-wrap d-flex flex-column">
+
+        <!-- Main Content -->
+        <div id="content">
+
+    		<jsp:include page="top.jsp" flush="true"></jsp:include>        
+            <!-- Begin Page Content -->
+            <br/>
+            <br/>
+            <p align="center" style="font-size: 30px;">에러페이지입니다.</p>
+            <p align="center" style="font-size: 30px;">${errorMsg}</p>
+            <div class="sh_cont container-fluid">
+            	<%-- <div><span><%=id %></span></div> --%>
+           	</div>
+        </div>
+    </div>
+</div>
+
+<!-- End of Page Wrapper -->
+
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top"></a>
+
+<!-- plugin -->
+<script src="../js/jquery/jquery.min.js"></script>
+<script src="../js/jquery/jquery-ui-1.12.1.js"></script>
+<script src="../js/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery/jquery.easing.min.js"></script>
+<!-- custom -->
+<script src="../js/ui.js"></script>
+
+<script>
+
+</script>
+</body>
+
+</html>

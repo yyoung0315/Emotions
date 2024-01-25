@@ -1,0 +1,8 @@
+INDEX VERSION 1.4+C:\Users\user\Desktop\나의_프로젝트_모음\emotionsProject\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+3037259823.index
+133753866.index
+3792501375.index
+2115326627.index
+2510892277.index
+704920838.index
+2286220977.index

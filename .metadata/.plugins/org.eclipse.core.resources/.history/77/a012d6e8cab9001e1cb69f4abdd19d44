@@ -1,0 +1,259 @@
+package com.yoon.emotions.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.yoon.emotions.service.UserService;
+import com.yoon.emotions.vo.UserVO;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+@Controller
+public class UserController {
+	
+	String path="";
+	
+	@Autowired
+	private UserService userService;
+	
+	
+	@Autowired // 서블릿 주입하기
+	private ServletContext servletContext;
+
+	@PostConstruct 
+	public void init() {
+		path = servletContext.getRealPath("/files/");
+		System.out.println("path:" + path);
+	}
+		
+	/**
+	 * 로그인 화면으로 이동
+	 * @return
+	 */
+	@RequestMapping(value = "login.do")
+	public String login() {
+		
+		return "/login/login";		
+	}
+	
+	/**
+	 * 회원가입 화면으로 이동
+	 * @return
+	 */
+	@RequestMapping(value = "form.do")
+	public String form() {
+		
+		return "/form/form";		
+	}	
+	
+	/**
+	 * 회원가입
+	 * @param insertData
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "formOk.do")
+	public String formOk(@RequestBody Map<String, String> insertData) {	
+		// 회원가입 필수 내용 service 전달 해당 값은 0 또는 다른 숫자 
+		int insertResult= userService.userInsert(insertData);
+		
+		if(insertResult > 0) {
+			return "ok";
+		}else {
+			return "no";
+		}
+	}
+	
+	/**
+	 * idCheck
+	 * @param user_id
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "idCheck.do")
+	public void idCheck(@RequestParam("user_id") String user_id, HttpServletResponse response) throws IOException {
+		//사용자가 사용 원하는 아이디받아와서 service 전달
+	    String checkId = userService.idCheck(user_id);
+	    PrintWriter out = response.getWriter();
+	    
+	    if (null == checkId) {
+	        out.print("OK");
+	    } else {
+	        out.print("NO");
+	    }
+	}
+	
+	/**
+	 * login 
+	 * @param userVo
+	 * @param session
+	 * @param response
+	 * @param loginDataMap
+	 * @throws IOException
+	 */
+	@ResponseBody
+	@RequestMapping(value="loginOk.do")
+	public void loginOk(UserVO userVo, HttpSession session, HttpServletResponse response,@RequestBody Map<String, String> loginDataMap) throws IOException {
+		//이름과 아이디 추출해서 loginInfo에 담기
+		UserVO loginInfo = userService.loginOk(loginDataMap);
+		
+		PrintWriter out = response.getWriter();
+		// 받아온 값 null 처리
+		if (!"".equals(loginInfo) && null != loginInfo) {	
+			//null이 아니면 세션 생성
+			session.setAttribute("loginInfo", loginInfo); 
+			out.print("OK");
+		} else {
+			out.print("NO");
+		}
+	}
+	
+	/**
+	 * 회원수정으로 이동
+	 * @param vo
+	 * @param session
+	 * @param model
+	 * @return
+	 * @throws IOException 
+	 */
+	@RequestMapping(value="/userEdit.do")
+	public String userDetail(UserVO vo, HttpSession session,Model model, HttpServletResponse response) throws IOException {
+		
+		if(null == session.getAttribute("loginInfo")) {
+			response.sendRedirect("/index.do");
+		}
+		
+		//세션 값(이름이랑 아이디) 받아서 아이디값 같이 넘겨주기
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		// 세션의 아이디 값을 전달 
+		UserVO userEditData = userService.userEdit(user_id);
+		
+		model.addAttribute("userInfo",userEditData);
+		
+		return "/form/userEdit";
+		
+	}
+	
+	/**
+	 * 비밀번호변경
+	 * @param pwd
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value="/pwdChange.do")
+	public void pwdChange(@RequestParam(value="pwd", required=false) String pwd, HttpSession session,HttpServletResponse response) throws IOException {
+		if(null == session.getAttribute("loginInfo")) {
+			response.sendRedirect("/index.do");
+		}
+		
+		
+		UserVO loginInfo = (UserVO)session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		int pwdResetResult = userService.pwdChange(pwd,user_id);
+		PrintWriter out = response.getWriter();
+		if(0 < pwdResetResult ) {
+			out.print("OK");
+		}else {
+			out.print("NO");
+		}
+	}
+	
+	/**
+	 * 프로필 사진 수정
+	 * @param profil_name
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value="/changeProfil.do")
+	@ResponseBody
+	public void changeProfil(@RequestParam(value="profil_img", required=false) MultipartFile profil_img, @RequestParam(value="before_profil", required=false) String before_profil,
+			HttpSession session,HttpServletResponse response, HttpServletRequest request) throws IOException {
+		
+		String profil_name="";
+		
+		PrintWriter out = response.getWriter();
+		
+		UserVO loginInfo = (UserVO)session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		String fileName = profil_img.getOriginalFilename();
+
+		File f = null;
+	 
+		f = new File(path+before_profil);
+		
+		if (!before_profil.equals("person-fill.svg")) {
+			f.delete(); // 이미지파일 삭제
+		 }
+    	
+    	 // 2. 파일 추가 하기 
+ 		f=new File(path+fileName);
+		if( !profil_img.isEmpty()) {
+					  
+		} else {
+			 fileName= "person-fill.svg"; // 첨부파일이 없어면 ...
+		}
+		
+		profil_img.transferTo(new File(path+ fileName));
+		profil_name = fileName;
+    	
+		
+		int changeProfilResult = userService.changeProfil(profil_name,profil_img,user_id);
+		
+		if(0 < changeProfilResult ) {
+			out.print("OK");
+		}else {
+			out.print("NO");
+		}
+	}
+	@RequestMapping(value="/delProfil.do")
+	public void delProfil(HttpSession session,Model model,HttpServletResponse response) throws IOException {
+		//세션 값(이름이랑 아이디) 받아서 아이디값 같이 넘겨주기
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		// 세션의 아이디 값을 전달 
+		int delProfilResult = userService.delProfil(user_id);
+		
+		PrintWriter out = response.getWriter();
+		
+		if(0 < delProfilResult ) {
+			out.print("OK");
+		}else {
+			out.print("NO");
+		}
+		
+	}
+	
+	/**
+	 * logout
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping(value="/logout.do")
+	public String logOut(HttpSession session) {
+		// 세션 종료
+		session.invalidate();
+		return "redirect:index.do";
+	}
+	
+}

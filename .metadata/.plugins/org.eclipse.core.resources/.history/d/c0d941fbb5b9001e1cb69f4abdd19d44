@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yoon.emotions.dao.ReplyDao">
+
+	<!-- 댓글/대댓글 전체 목록 띄우기 -->
+	<select id="replyList" parameterType="int" resultType="com.yoon.emotions.vo.ReplyVO">
+	
+			WITH RECURSIVE CommentCTE AS (						/*부모댓글 정보만 담은 테이블을 하나 선언*/
+			  -- 부모 댓글 선택
+			  SELECT
+			    REPLY_NO,										/*댓글번호PK*/
+			    RF_REPLY_NO,									/*부모댓글번호*/
+			    LEVEL_NO,										/*level번호*/
+			    BOARD_NO,										/*원글번호*/
+			    TEXT,											/*댓글내용*/
+			    USER_ID,										/*작성자아이디*/
+			    INPUT_DT,										/*댓글입력일자*/
+			    CAST(CONCAT(REPLY_NO) AS CHAR(255)) AS path,	/*path 컬럼추가(댓글번호PK)*/
+			    CAST(CONCAT(USER_ID) AS CHAR(255)) AS puser_id	/*puser_id 부모댓글 작성자컬럼추가*/
+			  FROM
+			    EMOTIONS_REPLY									/*댓글테이블*/
+			  WHERE
+			    	RF_REPLY_NO = 0								/*부모댓글번호없는 첫번째 댓글*/
+				and
+					BOARD_NO = #{board_no}						/*parameter 원글 번호*/
+			  UNION ALL
+			
+			  -- 자식 댓글 선택
+			  SELECT
+			    er.REPLY_NO,									/*댓글번호PK*/
+			    er.RF_REPLY_NO,									/*부모댓글번호*/
+			    er.LEVEL_NO,									/*level번호*/
+			    er.BOARD_NO,									/*원글번호*/
+			    er.TEXT,										/*댓글내용*/
+			    er.USER_ID,										/*작성자아이디*/
+			    er.INPUT_DT,									/*댓글입력일자*/
+			    CONCAT(c.path, '/', er.reply_no) AS path,		/*부모댓글+본인댓글번호PK*/
+			    c.puser_id										/*부모댓글 작성자아이디*/
+			  FROM
+			    EMOTIONS_REPLY er								/*댓글테이블*/
+			  INNER JOIN
+			    CommentCTE c 									/*첫번째댓글만 담은 댓글테이블*/
+			  ON 
+			  	er.RF_REPLY_NO = c.REPLY_NO
+			)
+			-- 최종 결과 정렬
+			SELECT
+			  REPLY_NO,											/*댓글번호PK*/
+			  RF_REPLY_NO,										/*부모댓글번호*/
+			  LEVEL_NO,											/*level번호*/
+			  BOARD_NO,											/*원글번호*/
+			  IFNULL(TEXT,"삭제된 댓글 입니다.") as TEXT2,			/*댓글내용*/
+			  TEXT,												/*댓글내용*/
+			  USER_ID,											/*작성자아이디*/
+			  INPUT_DT,											/*댓글입력일자*/
+			  path,												/*부모댓글+자식댓글 reply_no 모은 컬럼*/
+			  CONCAT('@',puser_id) AS puser_id					/*부모댓글 작성자아이디*/
+			FROM
+			  CommentCTE										/*첫번째댓글만 담은 댓글테이블*/
+			ORDER BY
+			  path												/*부모댓글+자식댓글 reply_no 모은 컬럼*/
+	</select>
+
+	<!-- 댓글/대댓글 등록 -->
+	<insert id="replyInsert" parameterType="com.yoon.emotions.vo.ReplyVO">
+		INSERT INTO EMOTIONS_REPLY 
+			( BOARD_NO					/*원 글의 번호*/
+			, TEXT						/*댓글 내용*/
+			, USER_ID					/*작성한 유저의 아이디*/
+			, RF_REPLY_NO 				/*부모댓글의 고유번호*/
+			, LEVEL_NO					/*해당 글의 level*/
+		)VALUES
+				( #{board_no}			/*parameter 원 글의 번호*/
+				, #{text}				/*parameter 댓글 내용*/
+				, #{user_id}			/*parameter 작성한 유저의 아이디*/
+				, #{rf_reply_no}		/*parameter 부모댓글의 고유번호*/
+				, #{level_no}			/*parameter 해당 글의 level*/
+				)
+	</insert>
+	
+	<!-- 대댓글 삭제(업뎃) -->
+	<update id="reReplyDelete" parameterType="int" >
+		UPDATE	
+			EMOTIONS_REPLY				/*댓글 테이블*/
+		SET
+			TEXT = null					/*삭제 시 변경되는 내용*/
+		WHERE
+			REPLY_NO = #{reply_no}		/*parameter 댓글 고유번호*/
+	</update>
+	<!-- 원댓글 삭제 -->
+	<delete id="replyDelete">
+	
+	
+	</delete>
+	
+	<!-- 댓글 수정 -->
+	<update id="editReply" parameterType="com.yoon.emotions.vo.ReplyVO">
+		UPDATE
+			EMOTIONS_REPLY				/*댓글 테이블*/
+		SET
+			TEXT = #{text}				/*parameter 댓글 내용*/
+		WHERE
+			REPLY_NO = #{reply_no}		/*parameter 댓글 고유번호*/
+	</update>
+	
+	<!-- 부모댓글 level_no가져오기 -->
+	<select id="findLevel" parameterType="int" resultType="int">
+		SELECT 
+			LEVEL_NO  					/*해당 글의 level*/
+		FROM 
+			EMOTIONS_REPLY 				/*댓글 테이블*/
+		where 
+			REPLY_NO = #{reply_no}		/*parameter 댓글 고유번호*/	
+        
+	</select>
+	
+	<!-- 댓글 총갯수 -->
+	<select id="totalReply" parameterType="int" resultType="int">
+		SELECT 
+			COUNT(REPLY_NO)				
+		FROM
+			EMOTIONS_REPLY				/*댓글 테이블*/
+		WHERE 
+			BOARD_NO = #{board_no}		/*parameter 원 글의 번호*/
+	</select>
+	
+	<!-- 글삭제로 댓글 전체 삭제 -->
+	<delete id="replyAllDel" parameterType="int">
+		DELETE FROM 
+			EMOTIONS_REPLY				/*댓글 테이블*/
+ 		WHERE 
+ 			BOARD_NO = #{board_no}		/*parameter 원 글의 번호*/
+	</delete>
+</mapper>

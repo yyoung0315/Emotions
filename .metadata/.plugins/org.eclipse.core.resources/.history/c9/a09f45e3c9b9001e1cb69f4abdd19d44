@@ -1,0 +1,384 @@
+package com.yoon.emotions.controller;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.yoon.emotions.service.BoardService;
+import com.yoon.emotions.service.UserService;
+import com.yoon.emotions.vo.BoardVO;
+import com.yoon.emotions.vo.EmotionsVO;
+import com.yoon.emotions.vo.InterestVO;
+import com.yoon.emotions.vo.UserVO;
+
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+@Controller
+public class BoardController {
+	
+	
+	@Autowired
+	private BoardService boardService;
+	
+	@Autowired
+	private UserService userService;
+	
+	/**
+	 * 메인 화면으로 이동
+	 * @return
+	 */
+	@RequestMapping(value = "index.do")
+	public String index(HttpSession session,Model model) {
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		List<BoardVO> newRecord = boardService.newRecord();
+	    if (loginInfo != null) {
+	        // 세션이 있는 경우 (로그인 상태)
+	        String user_id = loginInfo.getUser_id();
+	        
+	        String login_profil_name = userService.profil(user_id);
+	        
+	        session.setAttribute("login_profil_name", login_profil_name);
+	        
+	        
+	    	model.addAttribute("newRecord",newRecord);
+	    	
+	        return "index";	
+	        
+	    }else {
+
+	    	model.addAttribute("newRecord",newRecord);
+	    	
+	    	return "index";	
+	    }
+	    
+	}
+	
+	/**
+	 * myCalendar로 이동
+	 */
+	@RequestMapping(value = "myCalendar.do")
+	public String myCalendar(String screen, Model model,HttpSession session) {
+		if(null == session.getAttribute("loginInfo")) {
+			return "index";
+		}
+		
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		
+		String user_id = loginInfo.getUser_id();
+		
+		Map<String, Object> myCalendar  = boardService.myCalendar(user_id);
+		
+		model.addAttribute("year",myCalendar.get("year"));
+		model.addAttribute("month",myCalendar.get("month"));
+		model.addAttribute("myCalendarList",myCalendar.get("myCalendarList"));
+		model.addAttribute("dayOfMonth",myCalendar.get("dayOfMonth"));
+		model.addAttribute("firstDayOfWeek",myCalendar.get("firstDayOfWeek"));
+		model.addAttribute("myCC",myCalendar.get("myCalendarCount"));
+		
+		return "/myRecord/myCalendar";		
+	}
+	
+	/**
+	 *  나의기록/너의기록 으로 이동
+	 * @param model
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping(value = "recordList.do")
+	public String myRecord(Model model,HttpSession session,String search1, String search2, String page, String pageUnit,String cls2_cd,String screen ) {
+		
+		if(null == session.getAttribute("loginInfo")) {
+			return "index";
+		}
+		
+		
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		Map<String, Object> RecordData = boardService.recordList(user_id,search1,search2,page,pageUnit,cls2_cd,screen);
+		
+		
+		model.addAttribute("cls2Emotion",RecordData.get("cls2Emotion"));
+		model.addAttribute("recordList",RecordData.get("recordList"));
+		model.addAttribute("tc",RecordData.get("totalCount"));
+		model.addAttribute("toDay",RecordData.get("toDay"));
+		model.addAttribute("paging",RecordData.get("paging"));
+		model.addAttribute("cls2_cd",cls2_cd);
+		model.addAttribute("screen",screen);
+		
+		
+		return "/myRecord/recordList";		
+	}
+	
+	
+	/**
+	 * 글 작성 화면 띄우기
+	 * @param session
+	 * @param model
+	 * @param cls2_cd
+	 * @return
+	 */
+	@RequestMapping(value = "myWriter.do")
+	public String myWriter(HttpSession session , Model model,String cls2_cd ,String search1, String search2,String screen) {
+		
+		if(null == session.getAttribute("loginInfo")) {
+			return "index";
+		}
+		
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String login_id = loginInfo.getUser_id();
+		
+		Map<String, Object> emotions = boardService.writer(login_id,cls2_cd,search1,search2,screen);
+		
+		model.addAttribute("tc",emotions.get("totalCount"));
+		model.addAttribute("cls2Emotion",emotions.get("cls2Emotion"));
+		model.addAttribute("cls3Emotion",emotions.get("cls3Emotion"));
+		model.addAttribute("cls2_cd",cls2_cd);
+		
+		
+		return "/myRecord/myWriterEdit";		
+	}
+	/**
+	 * 글 수정화면 띄우기
+	 * @param session
+	 * @param model
+	 * @param cls2_cd
+	 * @return
+	 */
+	@RequestMapping(value = "myEdit.do")
+	public String myEdit(HttpSession session , Model model,String cls2_cd) {
+		
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String login_id = loginInfo.getUser_id();
+		
+		Map<String, Object> myEditData = boardService.myEdit(login_id, cls2_cd);
+		
+		model.addAttribute("myEdit",myEditData.get("myEdit"));
+		model.addAttribute("cls2Emotion",myEditData.get("cls2Emotion"));
+		model.addAttribute("cls3Emotion",myEditData.get("cls3Emotion"));
+		model.addAttribute("cls2_cd",cls2_cd);
+		return "/myRecord/myWriterEdit";		
+	}
+	
+	/**
+	 * 글등록
+	 * @param writeData
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "writeOk.do")
+	@ResponseBody
+	public void writeOk(@RequestBody Map<String, String> writeData, HttpSession  session,HttpServletResponse response) throws IOException {	
+		// 세션 값(이름이랑 아이디) 받아서 아이디만 map에 put 
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String login_id = loginInfo.getUser_id();
+		writeData.put("user_id", login_id);
+		
+		//ajax에 값 넘기기 위해 PrintWriter 변수
+		PrintWriter out = response.getWriter();
+		
+		int writeOkResult = boardService.writeOk(writeData);
+		
+		if(writeOkResult > 0) {
+			out.print("ok");	
+		}else {
+			out.print("no");
+		}
+	}
+	/**
+	 * 글 수정
+	 * @param writeData
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "editOk.do")
+	@ResponseBody
+	public void editOk(@RequestBody Map<String, String> editData, HttpSession  session,HttpServletResponse response) throws IOException {	
+		// 세션 값(이름이랑 아이디) 받아서 아이디만 map에 put 
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String login_id = loginInfo.getUser_id();
+		editData.put("user_id", login_id);
+		
+		//ajax에 값 넘기기 위해 PrintWriter 변수
+		PrintWriter out = response.getWriter();
+		
+		int editOkResult = boardService.editOk(editData);
+		
+		if(editOkResult > 0) {
+			out.print("ok");	
+		}else {
+			out.print("no");
+		}
+	}
+	/**
+	 * 글상세로 이동
+	 * @return
+	 */
+	@RequestMapping(value = "detailBoard.do")
+	public String detailBoard(int board_no, String screen, Model model,HttpSession session) {
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		Map<String, Object> detailBoardList = boardService.detailBoard(board_no,user_id,screen);
+		
+		model.addAttribute("detailList",detailBoardList.get("detailBoardList"));
+		model.addAttribute("detailEmotion",detailBoardList.get("detailEmotion"));
+		model.addAttribute("replyList", detailBoardList.get("replyList"));
+		model.addAttribute("screen", screen);
+		model.addAttribute("interest", detailBoardList.get("interest"));
+		
+		return "/yourRecord/detailBoard";		
+	}
+	
+	/**
+	 * 체크박스 글삭제
+	 * @param valueArr
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "writeDelete.do")
+	@ResponseBody
+	public void writeDelete(@RequestParam(value = "deleteChek[]") List<Integer> valueArr, HttpSession  session,HttpServletResponse response) throws IOException {	
+		// 세션 값(이름이랑 아이디) 받아서 아이디만 map에 put 
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+
+		//ajax에 값 넘기기 위해 PrintWriter 변수
+		PrintWriter out = response.getWriter();
+		
+		int deleteResult = boardService.deleteCheck(valueArr, user_id);
+		
+		if(deleteResult > 0) {
+			out.print("ok");	
+		}else {
+			out.print("no");
+		}
+	}
+	/**
+	 * 버튼으로 글삭제
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "deleteBtn.do")
+	public void deleteBtn(@RequestParam(value ="board_no") int board_no, HttpSession  session,HttpServletResponse response) throws IOException {	
+		// 세션 값(이름이랑 아이디) 받아서 아이디만 map에 put 
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		//ajax에 값 넘기기 위해 PrintWriter 변수
+		PrintWriter out = response.getWriter();
+		
+		int deleteResult = boardService.deleteBtn(board_no,user_id);
+		
+		if(deleteResult > 0) {
+			
+			out.print("ok");	
+		}else {
+			out.print("no");
+		}
+	}
+	
+	/**
+	 * 글 비공개
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "hideChk.do")
+	public void hideChk(@RequestParam(value ="board_no") int board_no,@RequestParam(value ="hide") String hide, HttpSession  session,HttpServletResponse response) throws IOException {	
+		
+		//ajax에 값 넘기기 위해 PrintWriter 변수
+		PrintWriter out = response.getWriter();
+		
+		int hideChkResult = boardService.hideChk(board_no,hide);
+		
+		if(hideChkResult > 0) {
+			
+			out.print("ok");	
+		}else {
+			out.print("no");
+		}
+	}
+	/**
+	 * 관심 글 등록
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "interestInsert.do")
+	public void interestInsert(@RequestParam(value ="board_no") int board_no, HttpSession  session,HttpServletResponse response) throws IOException {	
+		
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		//ajax에 값 넘기기 위해 PrintWriter 변수
+		PrintWriter out = response.getWriter();
+		
+		int hideChkResult = boardService.interestInsert(board_no,user_id);
+		
+		if(hideChkResult > 0) {
+			
+			out.print("ok");	
+		}else {
+			out.print("no");
+		}
+	}
+	/**
+	 * 관심 글 삭제
+	 * @param session
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "interestDel.do")
+	public void interestDel(@RequestParam(value ="board_no") int board_no, HttpSession  session,HttpServletResponse response) throws IOException {	
+		
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		
+		//ajax에 값 넘기기 위해 PrintWriter 변수
+		PrintWriter out = response.getWriter();
+		
+		int hideChkResult = boardService.interestDel(board_no,user_id);
+		
+		if(hideChkResult > 0) {
+			
+			out.print("ok");	
+		}else {
+			out.print("no");
+		}
+	}
+	
+	/**
+	 * 내 관심글로 이동
+	 * @return
+	 */
+	
+	@RequestMapping(value = "interesList.do") 
+	public String interesList(HttpSession  session,Model model) {
+		
+		UserVO loginInfo = (UserVO) session.getAttribute("loginInfo");
+		String user_id = loginInfo.getUser_id();
+		
+		List<InterestVO> interList= boardService.interesList(user_id);
+	
+		model.addAttribute("interList", interList);
+		
+		return "/yourRecord/interesList"; 
+	}
+}

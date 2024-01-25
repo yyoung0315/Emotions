@@ -1,0 +1,55 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+    <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+  <head>
+    <title>Emotions Project</title>
+<link href="./css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+<%@include file="../include/top.jsp"%>
+</head>
+<body>
+
+<main class="container">
+	<div class="cont_chart">
+		<!--<div id="chart2_1"></div> -->
+		<canvas id="save-chart"></canvas>
+	</div>
+</main>
+	
+<%@include file="../include/bottom.jsp"%>
+</body>
+<script src="./js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+<script src="../js/jquery-3.7.1.js" ></script>
+<script src="../js/jquery-ui.js"></script>
+<script type="text/javascript">
+
+
+var strSaveAmtJoin = ["전년전월누계","전년당월누계","전월누계","당월누계"];
+var strSaveTimeJoin = [0,916,0,733];
+new Chart(document.getElementById("save-chart"), {
+		type: 'bar',
+		data: {
+		  labels: strSaveAmtJoin,
+		  datasets: [
+			{
+			  barThickness: 120,
+			  backgroundColor: ["#f6c23e", "#4e73df","#1a9bae","#20c9a6"],
+			  data: strSaveTimeJoin
+			}
+		  ]
+		},
+		options: {
+			maintainAspectRatio: false,
+			legend: {
+				display: false,
+			}
+		}
+});
+
+
+</script>
+</html>
