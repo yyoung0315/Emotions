@@ -12,7 +12,7 @@ public class UserVO {
 	/**
 	 * 사용자ID PK
 	 */
-	private String 	user_id;
+	private String 	userId;
 	/**
 	 * 비밀번호
 	 */
@@ -20,11 +20,11 @@ public class UserVO {
 	/**
 	 * 이전 비밀번호
 	 */
-	private String 	before_pwd;
+	private String 	beforePwd;
 	/**
 	 * 비밀번호 틀림갯수
 	 */
-	private int 	pwd_wrong_count;
+	private int 	pwdWrongCount;
 	/**
 	 * 성명
 	 */
@@ -32,7 +32,7 @@ public class UserVO {
 	/**
 	 * 생년월일
 	 */
-	private String  bday;
+	private String  bDay;
 	/**
 	 * 전화번호
 	 */	
@@ -40,7 +40,7 @@ public class UserVO {
 	/**
 	 * 우편번호
 	 */	
-	private String  address_num;
+	private String  addressNum;
 	/**
 	 * 도로명주소
 	 */	
@@ -48,31 +48,31 @@ public class UserVO {
 	/**
 	 * 입력일시
 	 */	
-	private Date  	user_input_dt;
+	private Date  	userInputDt;
 	/**
 	 * 수정일시
 	 */	
-	private Date  	user_update_dt;
+	private Date  	userUpdateDt;
 	/**
 	 * 접속일자
 	 */	
-	private Date  	login_input_dt;
+	private Date  	loginInputDt;
 	/**
 	 * 권한
 	 */
-	private String auth_id;
+	private String authId;
 	/**
 	 * 감정횟수
 	 */
-	private int sad_emotions;
+	private int sadEmoCount;
 	
 	/**
 	 * 프로필사진이름
 	 */
-	private String profil_name;
+	private String profilName;
 	/**
 	 * 프로필사진
 	 */
-	private MultipartFile profil_img;
+	private MultipartFile profilImg;
 	
 }

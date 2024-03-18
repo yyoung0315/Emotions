@@ -12,7 +12,7 @@ public class BoardVO {
 	/**
 	 * 게시글번호 PK
 	 */
-	private int board_no;
+	private int boardno;
 	/**
 	 * 화면용num
 	 */
@@ -20,11 +20,11 @@ public class BoardVO {
 	/**
 	 * 제목
 	 */
-	private String board_title;
+	private String boardtitle;
 	/**
 	 * 내용
 	 */
-	private String board_detail;
+	private String boarddetail;
 	/**
 	 * 감정 분류
 	 */
@@ -32,27 +32,27 @@ public class BoardVO {
 	/**
 	 * 슬픈감정 횟수
 	 */
-	private int  sad_emotions;
+	private int  sademotions;
 	/**
 	 * 작성자 FK
 	 */
-	private String user_id;
+	private String userid;
 	/**
 	 * 프로필사진이름
 	 */
-	private String profil_name;
+	private String profilname;
 	/**
 	 * 프로필사진
 	 */
-	private MultipartFile profil_img;
+	private MultipartFile profilimg;
 	/**
-	 * 입력_일시
+	 * 입력일시
 	 */
-	private Date board_input_dt;
+	private Date boardinputdt;
 	/**
-	 * 수정_일시
+	 * 수정일시
 	 */
-	private Date board_update_dt;
+	private Date boardupdatedt;
 	/**
 	 * 글 비공개 여부
 	 */
@@ -61,28 +61,28 @@ public class BoardVO {
 	/**
 	 * 해당 글의 댓글 갯수
 	 */
-	private int reply_count;
+	private int replycount;
 	
 	/**
 	 * 2차분류 코드
 	 */
-	private String cls2_cd;
+	private String cls2cd;
 	/**
 	 * 2차분류 코드명
 	 */
-	private String cls2_nm;
+	private String cls2nm;
 	/**
 	 * 2차분류 이미지명
 	 */
-	private String cls2_img_nm;
+	private String cls2imgnm;
 	/**
 	 * 3차분류 코드
 	 */
-	private int cls3_cd;
+	private int cls3cd;
 	/**
 	 * 3차분류 코드명
 	 */
-	private String cls3_nm;
+	private String cls3nm;
 	/**
 	 * 검색 조건 
 	 */

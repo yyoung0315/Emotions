@@ -10,15 +10,15 @@ public class InterestVO {
 	/**
 	 * 관심글고유번호 FK
 	 */
-	private int board_no;
+	private int boardNo;
 	/**
 	 * 관심글을 등록한 아이디
 	 */
-	private String user_id; 
+	private String userId;
 	
 	/**
 	 * 관심글 등록 일자
 	 */
-	private Date it_input_dt;
+	private Date ITInputDt;
 
 }

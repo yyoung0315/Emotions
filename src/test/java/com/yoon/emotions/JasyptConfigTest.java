@@ -7,7 +7,7 @@ class JasyptConfigTest {
 
 	@Test
 	void stringEncryptor() {
-		String username = "root";
+		String username = "emotions";
 		String password = "young0901";
 
 		System.out.println(jasyptEncoding(username));

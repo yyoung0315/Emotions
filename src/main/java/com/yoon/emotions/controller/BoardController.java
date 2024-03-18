@@ -186,7 +186,7 @@ public class BoardController {
 	}
 	/**
 	 * 글 수정
-	 * @param writeData
+	 * @param editData
 	 * @param session
 	 * @param response
 	 * @throws IOException
